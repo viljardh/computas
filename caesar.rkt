@@ -5,8 +5,8 @@
 ;;       racket test.rkt -d TALL FIL   (dekoder)
 
 ;; Tror dette var ca alfabetet, jeg må fortsatt synge for å huske
-(define abc (list "a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n" "o" "p" 
-                  "q" "r" "s" "t" "u" "v" "w" "x" "y" "z" "æ" "ø" "å" " "))
+(define abc (list "a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n" "o"
+                  "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z" "æ" "ø" "å" " "))
 
 ;; Hjelpefunksjon listelengde
 (define (length lst)
