@@ -18,7 +18,7 @@
 
 
 ;; Hjelpefunksjon modulo
-;; Under 0 legger vi til y til vi er over, over y trekker vi fra
+;; Glemte å håndtere negative tall lmao 
 (define (mod x y)
   (cond ((< x 0) (mod (+ x y) y))
         ((< x y) x)
@@ -38,6 +38,7 @@
 (cond ((not (= (length args) 3))
        (error 'test "usage: racket test.rkt -e|-d OFFSET file.txt")))
 
+
 ;; Hente ut ant plasser, håper bruker gir noe som faktisk er et tall!
 (define n (string->number (cadr args)))
 ;; Sjekker just in case
@@ -47,6 +48,7 @@
 ;; Hente ut filnavn
 (define path (caddr args))
 
+
 ;; Koding går framover i alfabetet, dekoding bakover
 ;; Ellers kunne du også bare hatt length-n, hvem bryr seg
 (define shift
@@ -54,12 +56,14 @@
         ((string=? (car args) "-d") (- n))
         (else (error 'test "expected -e or -d"))))
 
+
 ;; Finner plassen til et tegn i lista, #f hvis det ikke er der.
 ;; pos teller oppover mens vi går gjennom lista
 (define (find-index c lst pos)
   (cond ((null? lst) #f)
         ((string=? c (car lst)) pos)
         (else (find-index c (cdr lst) (+ pos 1)))))
+
 
 ;; Tegn utenfor alfabetet blir værende (store bokstaver, tegn, linjeskift)
 ;; make-shifter tar inn hvor mye vi skal flytte og gir tilbake en prosedyre
