@@ -4,6 +4,9 @@
 ;; Bruk: racket test.rkt -e TALL FIL   (koder)
 ;;       racket test.rkt -d TALL FIL   (dekoder)
 
+;; Brukes både som kommandolinjeverktøy og som backend (se server.rkt)
+(provide shift-string abc-len)
+
 ;; Tror dette var ca alfabetet, jeg må fortsatt synge for å huske
 (define abc (list "a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n" "o"
                   "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z" "æ" "ø" "å" " "))
@@ -32,31 +35,6 @@
       (look-up (cdr lst) (- i 1))))
 
 
-;; Konvertere input til liste fordi hva i f er en vektor=???
-(define args (vector->list (current-command-line-arguments)))
-;; Sjekke lengde, gi feilmeldinger og sånt
-(cond ((not (= (length args) 3))
-       (error 'test "usage: racket test.rkt -e|-d OFFSET file.txt")))
-
-
-;; Hente ut ant plasser, håper bruker gir noe som faktisk er et tall!
-(define n (string->number (cadr args)))
-;; Sjekker just in case
-(cond ((not (exact-integer? n))
-       (error 'test "expected an integer")))
-
-;; Hente ut filnavn
-(define path (caddr args))
-
-
-;; Koding går framover i alfabetet, dekoding bakover
-;; Ellers kunne du også bare hatt length-n, hvem bryr seg
-(define shift
-  (cond ((string=? (car args) "-e") n)
-        ((string=? (car args) "-d") (- n))
-        (else (error 'test "expected -e or -d"))))
-
-
 ;; Finner plassen til et tegn i lista, #f hvis det ikke er der.
 ;; pos teller oppover mens vi går gjennom lista
 (define (find-index c lst pos)
@@ -74,17 +52,51 @@
       (if index
           (look-up abc (mod (+ index steps) abc-len))
           (string c)))))
-;; Lager en prosedyre som forskyver alfabetet ønsket antall plasser
-(define shift-char (make-shifter shift))
 
 
-;; Leser input-fil tegn for tegn, printer forskyvet tegn, 
-;; stopper når det ikke er flere tegn å lese
-(define (shift-file port)
-  (let ((c (read-char port)))
-    (cond ((eof-object? c) (close-input-port port))
-          (else (display (shift-char c))
-                (shift-file port)))))
+;; Forskyver hele strengen, ett tegn om gangen
+(define (shift-string str steps)
+  (apply string-append (map (make-shifter steps) (string->list str))))
 
-;; Kjører greia
-(shift-file (open-input-file path))
+
+;; Resten er kommandolinjeverktøyet, det kjører bare med racket caesar.rkt
+(module+ main
+  ;; Konvertere input til liste fordi hva i f er en vektor=???
+  (define args (vector->list (current-command-line-arguments)))
+  ;; Sjekke lengde, gi feilmeldinger og sånt
+  (cond ((not (= (length args) 3))
+         (error 'test "usage: racket test.rkt -e|-d OFFSET file.txt")))
+
+
+  ;; Hente ut ant plasser, håper bruker gir noe som faktisk er et tall!
+  (define n (string->number (cadr args)))
+  ;; Sjekker just in case
+  (cond ((not (exact-integer? n))
+         (error 'test "expected an integer")))
+
+  ;; Hente ut filnavn
+  (define path (caddr args))
+
+
+  ;; Koding går framover i alfabetet, dekoding bakover
+  ;; Ellers kunne du også bare hatt length-n, hvem bryr seg
+  (define shift
+    (cond ((string=? (car args) "-e") n)
+          ((string=? (car args) "-d") (- n))
+          (else (error 'test "expected -e or -d"))))
+
+
+  ;; Lager en prosedyre som forskyver alfabetet ønsket antall plasser
+  (define shift-char (make-shifter shift))
+
+
+  ;; Leser input-fil tegn for tegn, printer forskyvet tegn, 
+  ;; stopper når det ikke er flere tegn å lese
+  (define (shift-file port)
+    (let ((c (read-char port)))
+      (cond ((eof-object? c) (close-input-port port))
+            (else (display (shift-char c))
+                  (shift-file port)))))
+
+  ;; Kjører greia
+  (shift-file (open-input-file path)))
