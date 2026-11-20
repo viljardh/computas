@@ -19,6 +19,23 @@
 (define abc-len (length abc))
 
 
+;; Hjelpefunksjon map
+(define (map proc items)
+  (if (null? items)
+      '()
+      (cons (proc (car items))
+            (map proc (cdr items)))))
+
+
+;; Hjelpefunksjon apply
+(define (apply proc items)
+  (cond ((null? items) (proc))
+        ((null? (cdr items)) (proc (car items)))
+        (else (proc (car items)
+                    (apply proc (cdr items))))))
+
+
+
 ;; Hjelpefunksjon modulo
 ;; Glemte å håndtere negative tall lmao 
 (define (mod x y)
@@ -35,7 +52,6 @@
 
 
 ;; Finner plassen til et tegn i lista, #f hvis det ikke er der.
-;; pos teller oppover mens vi går gjennom lista
 (define (find-index c lst pos)
   (cond ((null? lst) #f)
         ((string=? c (car lst)) pos)
@@ -53,7 +69,7 @@
           (string c)))))
 
 
-;; Forskyver hele strengen, ett tegn om gangen
+;; Eksportfunksjon til JS
 (define (shift-string str steps)
   (apply string-append (map (make-shifter steps) (string->list str))))
 
@@ -72,6 +88,7 @@
   ;; Sjekker just in case
   (cond ((not (exact-integer? n))
          (error 'test "expected an integer")))
+
 
   ;; Hente ut filnavn
   (define path (caddr args))
@@ -96,6 +113,7 @@
       (cond ((eof-object? c) (close-input-port port))
             (else (display (shift-char c))
                   (shift-file port)))))
+
 
   ;; Kjører greia
   (shift-file (open-input-file path)))
