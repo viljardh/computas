@@ -129,7 +129,20 @@ strip.addEventListener('keydown', e => {
     e.preventDefault();
 });
 
-decoded.addEventListener('input', () => { source = decoded; update(); });
-encoded.addEventListener('input', () => { source = encoded; update(); });
+// Alfabetet har bare små bokstaver, så begge feltene tvinges til små bokstaver
+// (også ved lim inn). Vi husker markøren, ellers hopper den til slutten når
+// verdien byttes ut.
+function forceLowercase(field) {
+    const lower = field.value.toLowerCase();
+    if (lower !== field.value) {
+        const start = field.selectionStart;
+        const end = field.selectionEnd;
+        field.value = lower;
+        field.setSelectionRange(start, end);
+    }
+}
+
+decoded.addEventListener('input', () => { forceLowercase(decoded); source = decoded; update(); });
+encoded.addEventListener('input', () => { forceLowercase(encoded); source = encoded; update(); });
 setStrip(shift);
 update();
