@@ -1,6 +1,5 @@
 // Cæsar-chiffer, portert fra caesar.rkt.
-// Skriver man i Decoded kodes teksten fremover (Encoded), skriver man i Encoded
-// dekodes den bakover (Decoded).
+// Modus (kod/dekod) bestemmer om forskyvningen går framover eller bakover.
 
 const ABC = [..."abcdefghijklmnopqrstuvwxyzæøå "];
 
@@ -21,13 +20,15 @@ function shiftText(text, steps) {
 
 // ---- Chifferskive ----
 // Nederste rad er alfabetet vi koder. Øverste rad kan dras sideveis, og bokstaven
-// rett over hver bokstav nedenfor er den kodede. Posisjonen er forskyvningen:
-// dra til venstre for å øke den, til høyre for å minke den.
+// rett over hver bokstav nedenfor er den kodede. Posisjonen er det samme som tallet
+// i forskyvningsfeltet: dra til venstre for å øke, til høyre for å minke.
+// Modus bestemmer bare lesretningen (kod: nede -> oppe, dekod: oppe -> nede).
 
 const N = ABC.length;
 const COPIES = 3; // tre kopier så raden kan gå rundt uten hull
 const strip = document.getElementById('strip');
 const plain = document.getElementById('plain');
+const caption = document.getElementById('caption');
 
 function makeCell(c) {
     const cell = document.createElement('div');
@@ -46,25 +47,36 @@ function setStrip(d) {
     strip.setAttribute('aria-valuenow', Math.round(mod(Math.round(d), N)));
 }
 
-const decoded = document.getElementById('decoded');
-const encoded = document.getElementById('encoded');
-
-// Forskyvningen: heltall, kan bli større enn alfabetet hvis man drar flere runder.
-// Posisjonen på skiven er den eneste inngangen.
-let shift = 3;
-
-// Feltet man sist skrev i er "fasit", det andre regnes ut fra det
-let source = decoded;
+const shiftInput = document.getElementById('shift');
+const input = document.getElementById('input');
+const output = document.getElementById('output');
+const error = document.getElementById('error');
 
 function update() {
+    const decoding = document.getElementById('mode-decode').checked;
+    caption.textContent = 'Dra den blå raden sideveis. ' + (decoding
+        ? 'Dekod: finn bokstaven i øverste rad, svaret står under'
+        : 'Kod: finn bokstaven i nederste rad, svaret står over');
+    const n = Number(shiftInput.value);
+    if (shiftInput.value.trim() === '' || !Number.isInteger(n)) {
+        error.textContent = 'Forskyvning må være et heltall';
+        output.value = '';
+        return;
+    }
+    error.textContent = '';
     // Koding går framover i alfabetet, dekoding bakover
-    if (source === decoded) encoded.value = shiftText(decoded.value, shift);
-    else decoded.value = shiftText(encoded.value, -shift);
+    output.value = shiftText(input.value, decoding ? -n : n);
 }
 
-// Setter forskyvningen, og flytter raden med mindre vi drar (da flytter musa den selv)
+// Gjeldende forskyvning fra feltet, eller null hvis det ikke er et heltall
+function currentShift() {
+    const n = Number(shiftInput.value);
+    return shiftInput.value.trim() === '' || !Number.isInteger(n) ? null : n;
+}
+
+// Setter tallet, og flytter raden med mindre vi drar (da flytter musa den selv)
 function setShift(n, moveStrip = true) {
-    shift = n;
+    shiftInput.value = n;
     if (moveStrip) {
         strip.classList.remove('snap');
         setStrip(n);
@@ -75,8 +87,8 @@ function setShift(n, moveStrip = true) {
 let drag = null;
 
 strip.addEventListener('pointerdown', e => {
-    if (e.button !== 0) return;
-    const base = shift;
+    const base = currentShift();
+    if (base === null || e.button !== 0) return;
     strip.classList.remove('snap');
     strip.classList.add('dragging');
     strip.setPointerCapture(e.pointerId);
@@ -96,7 +108,7 @@ strip.addEventListener('pointermove', e => {
     drag.d = drag.base - (e.clientX - drag.startX) / drag.cell;
     setStrip(drag.d);
     const n = Math.round(drag.d);
-    if (n !== shift) setShift(n, false);
+    if (n !== currentShift()) setShift(n, false);
 });
 
 function endDrag(e) {
@@ -118,18 +130,35 @@ strip.addEventListener('pointercancel', endDrag);
 strip.addEventListener('transitionend', () => {
     if (drag) return;
     strip.classList.remove('snap');
-    setStrip(shift);
+    const n = currentShift();
+    if (n !== null) setStrip(n);
 });
 
 // Piltaster på den fokuserte raden, samme retning som å dra
 strip.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft') setShift(shift + 1);
-    else if (e.key === 'ArrowRight') setShift(shift - 1);
+    const n = currentShift();
+    if (n === null) return;
+    if (e.key === 'ArrowLeft') setShift(n + 1);
+    else if (e.key === 'ArrowRight') setShift(n - 1);
     else return;
     e.preventDefault();
 });
 
-decoded.addEventListener('input', () => { source = decoded; update(); });
-encoded.addEventListener('input', () => { source = encoded; update(); });
-setStrip(shift);
+// Skriver man tallet selv, flytter raden seg til riktig sted
+shiftInput.addEventListener('input', () => {
+    const n = currentShift();
+    if (n !== null && !drag) {
+        strip.classList.remove('snap');
+        setStrip(n);
+    }
+});
+
+// Store knapper i stedet for de små pilene i tallfeltet
+document.getElementById('shift-minus').addEventListener('click', () => setShift((currentShift() ?? 0) - 1));
+document.getElementById('shift-plus').addEventListener('click', () => setShift((currentShift() ?? 0) + 1));
+
+document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', update));
+shiftInput.addEventListener('input', update);
+input.addEventListener('input', update);
 update();
+if (currentShift() !== null) setStrip(currentShift());

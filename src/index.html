@@ -10,8 +10,27 @@
     <h1>🔐 Cæsar-chiffer</h1>
     <div class="container">
         <div class="panel">
-            <label for="decoded">Decoded</label>
-            <textarea id="decoded" rows="6" placeholder="Skriv noe her…"></textarea>
+            <div class="controls">
+                <div class="control">
+                    <div class="panel-title" id="mode-title">Modus</div>
+                    <div class="toggle" role="radiogroup" aria-labelledby="mode-title">
+                        <input type="radio" name="mode" id="mode-encode" value="encode" checked>
+                        <label for="mode-encode">Kod</label>
+                        <input type="radio" name="mode" id="mode-decode" value="decode">
+                        <label for="mode-decode">Dekod</label>
+                    </div>
+                </div>
+
+                <div class="control">
+                    <label for="shift">Forskyvning</label>
+                    <div class="stepper">
+                        <button type="button" id="shift-minus" aria-label="Minus én">−</button>
+                        <input type="number" id="shift" value="3" step="1">
+                        <button type="button" id="shift-plus" aria-label="Pluss én">+</button>
+                    </div>
+                </div>
+            </div>
+            <div id="error" class="error" role="alert"></div>
         </div>
 
         <div class="panel">
@@ -23,11 +42,17 @@
                 </div>
                 <div class="row row-bottom" id="plain"></div>
             </div>
+            <div class="wheel-caption" id="caption"></div>
         </div>
 
         <div class="panel">
-            <label for="encoded">Encoded</label>
-            <textarea id="encoded" rows="6" placeholder="…eller skriv kodet tekst her"></textarea>
+            <label for="input">Input</label>
+            <textarea id="input" rows="6" placeholder="Skriv noe her…"></textarea>
+        </div>
+
+        <div class="panel">
+            <label for="output">Output</label>
+            <textarea id="output" rows="6" readonly></textarea>
         </div>
     </div>
 
