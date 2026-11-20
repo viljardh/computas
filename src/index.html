@@ -10,26 +10,24 @@
     <h1>🔐 Cæsar-chiffer</h1>
     <div class="container">
         <div class="panel">
-            <div class="toggle" role="radiogroup" aria-label="Modus">
-                <input type="radio" name="mode" id="mode-encode" value="encode" checked>
-                <label for="mode-encode">Kod</label>
-                <input type="radio" name="mode" id="mode-decode" value="decode">
-                <label for="mode-decode">Dekod</label>
+            <label for="decoded">Decoded</label>
+            <textarea id="decoded" rows="6" placeholder="Skriv noe her…"></textarea>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title" id="wheel-title">Chifferskive (klikk og dra) </div>
+            <div class="wheel">
+                <div class="row row-top">
+                    <div class="strip" id="strip" tabindex="0" role="slider"
+                         aria-labelledby="wheel-title" aria-valuemin="0"></div>
+                </div>
+                <div class="row row-bottom" id="plain"></div>
             </div>
-
-            <label for="shift">Forskyvning</label>
-            <input type="number" id="shift" value="3" step="1">
-            <div id="error" class="error" role="alert"></div>
         </div>
 
         <div class="panel">
-            <label for="input">Input</label>
-            <textarea id="input" rows="6" placeholder="Skriv noe her…"></textarea>
-        </div>
-
-        <div class="panel">
-            <label for="output">Output</label>
-            <textarea id="output" rows="6" readonly></textarea>
+            <label for="encoded">Encoded</label>
+            <textarea id="encoded" rows="6" placeholder="…eller skriv kodet tekst her"></textarea>
         </div>
     </div>
 
