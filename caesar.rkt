@@ -4,7 +4,6 @@
 ;; Bruk: racket test.rkt -e TALL FIL   (koder)
 ;;       racket test.rkt -d TALL FIL   (dekoder)
 
-;; Brukes både som kommandolinjeverktøy og som backend (se server.rkt)
 (provide shift-string abc-len)
 
 ;; Tror dette var ca alfabetet, jeg må fortsatt synge for å huske
