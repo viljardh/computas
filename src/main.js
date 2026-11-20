@@ -54,9 +54,6 @@ const error = document.getElementById('error');
 
 function update() {
     const decoding = document.getElementById('mode-decode').checked;
-    caption.textContent = 'Dra den blå raden sideveis. ' + (decoding
-        ? 'Dekod: finn bokstaven i øverste rad, svaret står under'
-        : 'Kod: finn bokstaven i nederste rad, svaret står over');
     const n = Number(shiftInput.value);
     if (shiftInput.value.trim() === '' || !Number.isInteger(n)) {
         error.textContent = 'Forskyvning må være et heltall';
@@ -159,6 +156,17 @@ document.getElementById('shift-plus').addEventListener('click', () => setShift((
 
 document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', update));
 shiftInput.addEventListener('input', update);
-input.addEventListener('input', update);
+// Alfabetet har bare små bokstaver, så input tvinges til små bokstaver (også ved lim inn).
+// Vi husker markøren, ellers hopper den til slutten når verdien byttes ut.
+input.addEventListener('input', () => {
+    const lower = input.value.toLowerCase();
+    if (lower !== input.value) {
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.value = lower;
+        input.setSelectionRange(start, end);
+    }
+    update();
+});
 update();
 if (currentShift() !== null) setStrip(currentShift());
