@@ -81,7 +81,7 @@ def histogram(idx):
 
 
 def shift_text(text, steps):
-    """Samme som caesar.rkt: tegn utenfor alfabetet blir stående."""
+    """tegn utenfor alfabetet blir stående."""
     return "".join(ABC[(ABC.index(c) + steps) % N] if c in ABC else c for c in text)
 
 
@@ -94,7 +94,7 @@ class Cracker(nn.Module):
     ikke lære 30 ulike tilfeller hver for seg. Utgangen er en poengsum per forskyvning.
     """
 
-    def __init__(self, hidden=64):
+    def __init__(self, hidden=16):
         super().__init__()
         self.scorer = nn.Sequential(
             nn.Linear(N, hidden), nn.ReLU(),
