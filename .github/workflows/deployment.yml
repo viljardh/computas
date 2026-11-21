@@ -5,23 +5,60 @@ on:
     branches: [ main ]
     paths:
       - 'src/**'
+      - 'netlify/**'
+      - 'netlify.toml'
+      - 'api.rkt'
+      - 'caesar.rkt'
+      - 'scripts/build-racket.sh'
       - '.github/workflows/deployment.yml'
   workflow_dispatch:
 
+# Jobben trenger bare å lese koden. Netlify-tilgangen ligger i hemmelighetene under.
 permissions:
   contents: read
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # 22.04, så Racket-programmet bygges mot en eldre glibc (2.34) og kjører på flere systemer
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v5
 
+    - name: Install Racket
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y racket
+
+    - name: Run tests
+      run: raco test tests.rkt
+
+    # API-et er et Racket-program som Netlify-funksjonen starter. Det bygges her og pakkes med funksjonen.
+    - name: Build the Racket program
+      run: ./scripts/build-racket.sh
+
+    - name: Smoke test the Racket program
+      run: |
+        out=$(echo '{"text":"hei","shift":3,"mode":"encode"}' | netlify/racket/bin/caesar-api)
+        echo "$out"
+        test "$out" = '{"body":{"output":"khl"},"status":200}'
+
     - name: Deploy to netlify
+      id: deploy
       run: |
         npm install -g netlify-cli@23.15.1
-        netlify deploy --dir=./src/ --prod
+        netlify deploy --dir=./src/ --functions=./netlify/functions --prod --json > deploy.json
+        cat deploy.json
+        echo "url=$(jq -r '.deploy_url' deploy.json)" >> "$GITHUB_OUTPUT"
       env:
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+    # Den ekte testen: kaller API-et på den nye utgaven. Feiler den, står årsaken i svaret under.
+    - name: Test the deployed API
+      run: |
+        url="${{ steps.deploy.outputs.url }}"
+        echo "Tester $url/api/caesar"
+        out=$(curl -sS -m 60 -X POST "$url/api/caesar" -H 'Content-Type: application/json' -d '{"text":"hei","shift":3,"mode":"encode"}')
+        echo "$out"
+        test "$out" = '{"output":"khl"}'
