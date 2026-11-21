@@ -19,13 +19,13 @@ permissions:
 
 jobs:
   deploy:
-    # 22.04, så Racket-programmet bygges mot en eldre glibc (2.34) og kjører på flere systemer
     runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v5
 
-    - name: Install Racket
+    # Ubuntus Racket brukes bare til testene
+    - name: Install Racket (for the tests)
       run: |
         sudo apt-get update
         sudo apt-get install -y racket
@@ -33,15 +33,39 @@ jobs:
     - name: Run tests
       run: raco test tests.rkt
 
-    # API-et er et Racket-program som Netlify-funksjonen starter. Det bygges her og pakkes med funksjonen.
+    # Programmet Netlify-funksjonen kjører må bygges med Rackets egen utgave. Ubuntus Racket er bygget
+    # mot glibc 2.35, og Netlify-funksjoner har 2.34 ("version `GLIBC_2.35' not found").
+    # Handlingen er festet til en bestemt commit (v1.15). Den kommer etter testene, så raco herfra og
+    # ut er den nye.
+    - name: Install Racket (official build, for the function)
+      uses: Bogdanp/setup-racket@2466913449df77df2bad149d1f2fc4e1ea4795dd # v1.15
+      with:
+        distribution: 'minimal'
+        variant: 'CS'
+        version: '9.1'
+        packages: 'compiler-lib'
+
     - name: Build the Racket program
-      run: ./scripts/build-racket.sh
+      run: |
+        racket --version
+        ./scripts/build-racket.sh
+
+    # Feiler her, før deploy, hvis programmet trenger en nyere glibc enn Netlify har
+    - name: Check glibc requirement
+      run: ./scripts/check-glibc.sh
 
     - name: Smoke test the Racket program
       run: |
-        out=$(echo '{"text":"hei","shift":3,"mode":"encode"}' | netlify/racket/bin/caesar-api)
-        echo "$out"
-        test "$out" = '{"body":{"output":"khl"},"status":200}'
+        check() {
+          out=$(printf '%s' "$1" | netlify/racket/bin/caesar-api | jq -cS .)   # jq sorterer nøklene, så rekkefølgen ikke spiller noen rolle
+          echo "$out"
+          test "$out" = "$2"
+        }
+        check '{"text":"hei","shift":3,"mode":"encode"}'  '{"body":{"output":"khl"},"status":200}'
+        check '{"text":"khl","shift":3,"mode":"decode"}'  '{"body":{"output":"hei"},"status":200}'
+        check '{"text":"æøå","shift":1,"mode":"encode"}'  '{"body":{"output":"øå "},"status":200}'
+        check '{"text":"a","shift":1.5,"mode":"encode"}'  '{"body":{"error":"shift must be an integer"},"status":400}'
+        check '{nope'                                      '{"body":{"error":"text must be a string"},"status":400}'
 
     - name: Deploy to netlify
       id: deploy
