@@ -24,31 +24,25 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
-    # Ubuntus Racket brukes bare til testene
-    - name: Install Racket (for the tests)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y racket
-
-    - name: Run tests
-      run: raco test tests.rkt
-
-    # Programmet Netlify-funksjonen kjører må bygges med Rackets egen utgave. Ubuntus Racket er bygget
-    # mot glibc 2.35, og Netlify-funksjoner har 2.34 ("version `GLIBC_2.35' not found").
-    # Handlingen er festet til en bestemt commit (v1.15). Den kommer etter testene, så raco herfra og
-    # ut er den nye.
-    - name: Install Racket (official build, for the function)
+    # Vi bruker Rackets egen utgave til alt: testene, bygget og glibc-sjekken. Ubuntus Racket er bygget mot
+    # glibc 2.35, og Netlify-funksjoner har 2.34 ("version `GLIBC_2.35' not found"), så den kan ikke brukes
+    # til programmet funksjonen kjører. Handlingen er festet til en bestemt commit (v1.15).
+    # Ikke installer Ubuntus Racket i tillegg, installasjonen vil overskrive /usr/bin/racket og stopper.
+    - name: Install Racket (official build)
       uses: Bogdanp/setup-racket@2466913449df77df2bad149d1f2fc4e1ea4795dd # v1.15
       with:
         distribution: 'minimal'
         variant: 'CS'
         version: '9.1'
-        packages: 'compiler-lib'
+        packages: 'compiler-lib,rackunit-lib'
 
-    - name: Build the Racket program
+    - name: Run tests
       run: |
         racket --version
-        ./scripts/build-racket.sh
+        raco test tests.rkt
+
+    - name: Build the Racket program
+      run: ./scripts/build-racket.sh
 
     # Feiler her, før deploy, hvis programmet trenger en nyere glibc enn Netlify har
     - name: Check glibc requirement
