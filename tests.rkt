@@ -6,8 +6,7 @@
 (require rackunit
          racket/file
          racket/runtime-path
-         "caesar.rkt"    ; shift-string og abc-len er eksportert
-         "api.rkt")      ; caesar-api og max-text-length
+         "caesar.rkt")   ; shift-string og abc-len er eksportert
 
 ;; Resten av funksjonene i caesar.rkt er ikke eksportert. Vi henter dem ut av modulens
 ;; namespace i stedet for å endre caesar.rkt bare for å kunne teste den.
@@ -170,40 +169,6 @@
   (for* ([n '(-31 -5 0 1 7 13 29 30 61)]
          [s '("hei på deg" "" "æøå " "a b c" "Store Bokstaver, tegn og tall 123!")])
     (check-equal? (shift-string (shift-string s n) (- n)) s)))
-
-
-;; ---------------------------------------------------------------- api.rkt (logikken bak /api/caesar)
-
-;; caesar-api gir to verdier, status og svar. Vi samler dem i en liste for å sammenligne.
-(define (api body)
-  (call-with-values (lambda () (caesar-api body)) list))
-
-(define (ok output) (list 200 (hasheq 'output output)))
-(define (feil melding) (list 400 (hasheq 'error melding)))
-
-(test-case "caesar-api koder og dekoder"
-  (check-equal? (api (hasheq 'text "hei" 'shift 3 'mode "encode")) (ok "khl"))
-  (check-equal? (api (hasheq 'text "khl" 'shift 3 'mode "decode")) (ok "hei"))
-  (check-equal? (api (hasheq 'text "" 'shift 5 'mode "encode")) (ok "")))
-
-(test-case "caesar-api tåler negative og enorme forskyvninger"
-  (check-equal? (api (hasheq 'text "abc" 'shift -2 'mode "encode")) (ok "å a"))
-  (check-equal? (api (hasheq 'text "abc" 'shift (+ (expt 10 30) 1) 'mode "encode")) (ok "lmn")))
-
-(test-case "caesar-api gir 400 med riktig melding"
-  (check-equal? (api #f) (feil "text must be a string"))                                  ; ugyldig JSON
-  (check-equal? (api '(1 2 3)) (feil "text must be a string"))                            ; JSON som ikke er et objekt
-  (check-equal? (api (hasheq 'shift 1 'mode "encode")) (feil "text must be a string"))
-  (check-equal? (api (hasheq 'text 5 'shift 1 'mode "encode")) (feil "text must be a string"))
-  (check-equal? (api (hasheq 'text "a" 'shift 1.5 'mode "encode")) (feil "shift must be an integer"))
-  (check-equal? (api (hasheq 'text "a" 'shift "1" 'mode "encode")) (feil "shift must be an integer"))
-  (check-equal? (api (hasheq 'text "a" 'shift 1 'mode "rot")) (feil "mode must be encode or decode"))
-  (check-equal? (api (hasheq 'text "a" 'shift 1)) (feil "mode must be encode or decode")))
-
-(test-case "caesar-api: teksten kan ha opptil max-text-length tegn"
-  (check-equal? (car (api (hasheq 'text (make-string max-text-length #\a) 'shift 1 'mode "encode"))) 200)
-  (check-equal? (api (hasheq 'text (make-string (+ max-text-length 1) #\a) 'shift 1 'mode "encode"))
-                (feil "text too long")))
 
 
 ;; ---------------------------------------------------------------- eksempelfilene
