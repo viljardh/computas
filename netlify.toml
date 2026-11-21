@@ -1,0 +1,8 @@
+# Siden ligger i src/. API-et er en Netlify-funksjon som starter et Racket-program.
+# Programmet bygges til netlify/racket/ før deploy (scripts/build-racket.sh) og pakkes med funksjonen.
+[build]
+  publish = "src"
+  functions = "netlify/functions"
+
+[functions]
+  included_files = ["netlify/racket/**"]
