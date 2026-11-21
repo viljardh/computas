@@ -4,8 +4,6 @@
 ;; Bruk: racket caesar.rkt -e TALL FIL   (koder)
 ;;       racket caesar.rkt -d TALL FIL   (dekoder)
 
-(provide shift-string abc-len)
-
 ;; Tror dette var ca alfabetet, jeg må fortsatt synge for å huske
 (define abc '("a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n" "o"
               "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z" "æ" "ø" "å" " "))
@@ -69,12 +67,6 @@
           (string c)))))
 
 
-;; Eksportfunksjon til JS
-(define (shift-string str steps)
-  (apply string-append (map (make-shifter steps) (string->list str))))
-
-
-;; Resten er kommandolinjeverktøyet, det kjører bare med racket caesar.rkt
 (module+ main
   ;; Konvertere input til liste fordi hva i f er en vektor=???
   (define args (vector->list (current-command-line-arguments)))
@@ -114,6 +106,11 @@
             (else (display (shift-char c))
                   (shift-file port)))))
 
-
   ;; Kjører greia
   (shift-file (open-input-file path)))
+
+;; UwU what's this?
+(define (shift-string str steps)
+  (apply string-append (map (make-shifter steps) (string->list str))))
+
+(provide shift-string abc-len)
