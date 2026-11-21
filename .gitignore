@@ -1,8 +1,0 @@
-# Racket
-compiled/
-
-# Det frittstående Racket-programmet til Netlify-funksjonen (ca. 45 MB). Bygges med scripts/build-racket.sh
-netlify/racket/
-
-# Lokal Netlify-tilstand (netlify dev / serve)
-.netlify/

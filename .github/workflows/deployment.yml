@@ -5,78 +5,23 @@ on:
     branches: [ main ]
     paths:
       - 'src/**'
-      - 'netlify/**'
-      - 'netlify.toml'
-      - 'api.rkt'
-      - 'caesar.rkt'
-      - 'scripts/build-racket.sh'
       - '.github/workflows/deployment.yml'
   workflow_dispatch:
 
-# Jobben trenger bare å lese koden. Netlify-tilgangen ligger i hemmelighetene under.
 permissions:
   contents: read
 
 jobs:
   deploy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v5
 
-    # Vi bruker Rackets egen utgave til alt: testene, bygget og glibc-sjekken. Ubuntus Racket er bygget mot
-    # glibc 2.35, og Netlify-funksjoner har 2.34 ("version `GLIBC_2.35' not found"), så den kan ikke brukes
-    # til programmet funksjonen kjører. Handlingen er festet til en bestemt commit (v1.15).
-    # Ikke installer Ubuntus Racket i tillegg, installasjonen vil overskrive /usr/bin/racket og stopper.
-    - name: Install Racket (official build)
-      uses: Bogdanp/setup-racket@2466913449df77df2bad149d1f2fc4e1ea4795dd # v1.15
-      with:
-        distribution: 'minimal'
-        variant: 'CS'
-        version: '9.1'
-        packages: 'compiler-lib,rackunit-lib'
-
-    - name: Run tests
-      run: |
-        racket --version
-        raco test tests.rkt
-
-    - name: Build the Racket program
-      run: ./scripts/build-racket.sh
-
-    # Feiler her, før deploy, hvis programmet trenger en nyere glibc enn Netlify har
-    - name: Check glibc requirement
-      run: ./scripts/check-glibc.sh
-
-    - name: Smoke test the Racket program
-      run: |
-        check() {
-          out=$(printf '%s' "$1" | netlify/racket/bin/caesar-api | jq -cS .)   # jq sorterer nøklene, så rekkefølgen ikke spiller noen rolle
-          echo "$out"
-          test "$out" = "$2"
-        }
-        check '{"text":"hei","shift":3,"mode":"encode"}'  '{"body":{"output":"khl"},"status":200}'
-        check '{"text":"khl","shift":3,"mode":"decode"}'  '{"body":{"output":"hei"},"status":200}'
-        check '{"text":"æøå","shift":1,"mode":"encode"}'  '{"body":{"output":"øå "},"status":200}'
-        check '{"text":"a","shift":1.5,"mode":"encode"}'  '{"body":{"error":"shift must be an integer"},"status":400}'
-        check '{nope'                                      '{"body":{"error":"text must be a string"},"status":400}'
-
     - name: Deploy to netlify
-      id: deploy
       run: |
         npm install -g netlify-cli@23.15.1
-        netlify deploy --dir=./src/ --functions=./netlify/functions --prod --json > deploy.json
-        cat deploy.json
-        echo "url=$(jq -r '.deploy_url' deploy.json)" >> "$GITHUB_OUTPUT"
+        netlify deploy --dir=./src/ --prod
       env:
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-
-    # Den ekte testen: kaller API-et på den nye utgaven. Feiler den, står årsaken i svaret under.
-    - name: Test the deployed API
-      run: |
-        url="${{ steps.deploy.outputs.url }}"
-        echo "Tester $url/api/caesar"
-        out=$(curl -sS -m 60 -X POST "$url/api/caesar" -H 'Content-Type: application/json' -d '{"text":"hei","shift":3,"mode":"encode"}')
-        echo "$out"
-        test "$out" = '{"output":"khl"}'
