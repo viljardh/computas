@@ -36,9 +36,11 @@
 
 ;; Hjelpefunksjon modulo
 ;; Glemte å håndtere negative tall lmao 
+;; og nulldivisjon!!
 (define (mod x y)
   (cond ((< x 0) (mod (+ x y) y))
         ((< x y) x)
+        ((= y 0) (error "zero division"))
         (else (mod (- x y) y))))
 
 
