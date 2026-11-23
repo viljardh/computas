@@ -7,27 +7,43 @@
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
-    <h1>🔐 Cæsar-chiffer</h1>
+    <h1><span aria-hidden="true">🔐</span> Cæsar-chiffer</h1>
     <div class="container">
         <div class="panel">
-            <label for="decoded">Decoded</label>
+            <label for="decoded">Klartekst</label>
             <textarea id="decoded" rows="6" placeholder="Skriv noe her…"></textarea>
         </div>
 
         <div class="panel">
-            <div class="panel-title" id="wheel-title">Chifferskive (klikk og dra) </div>
+            <div class="panel-title" id="wheel-title">Chifferskive</div>
+            <p class="hint" id="wheel-hint">
+                Bokstaven i den blå raden er den krypterte versjonen av bokstaven rett under.
+                Dra den blå raden sideveis, bruk piltastene, eller trykk på − og +.
+            </p>
             <div class="wheel">
                 <div class="row row-top">
                     <div class="strip" id="strip" tabindex="0" role="slider"
-                         aria-labelledby="wheel-title" aria-valuemin="0"></div>
+                         aria-labelledby="wheel-title" aria-describedby="wheel-hint"
+                         aria-valuemin="0"></div>
                 </div>
                 <div class="row row-bottom" id="plain"></div>
+            </div>
+
+            <div class="shift-controls">
+                <button type="button" class="shift-btn" id="shift-down"
+                        aria-label="Senk forskyvningen med 1">−</button>
+                <div class="shift-display" aria-live="polite" aria-atomic="true">
+                    <span class="shift-label">Forskyvning</span>
+                    <span class="shift-value" id="shift-value">3</span>
+                </div>
+                <button type="button" class="shift-btn" id="shift-up"
+                        aria-label="Øk forskyvningen med 1">+</button>
             </div>
         </div>
 
         <div class="panel">
-            <label for="encoded">Encoded</label>
-            <textarea id="encoded" rows="6" placeholder="…eller skriv kodet tekst her"></textarea>
+            <label for="encoded">Kryptert tekst</label>
+            <textarea id="encoded" rows="6" placeholder="…eller skriv kryptert tekst her"></textarea>
         </div>
     </div>
 

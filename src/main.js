@@ -1,6 +1,6 @@
 // Cæsar-chiffer, portert fra caesar.rkt.
-// Skriver man i Decoded kodes teksten fremover (Encoded), skriver man i Encoded
-// dekodes den bakover (Decoded).
+// Skriver man i Klartekst krypteres teksten fremover (Kryptert tekst), skriver man
+// i Kryptert tekst dekrypteres den bakover (Klartekst).
 
 const ABC = [..."abcdefghijklmnopqrstuvwxyzæøå "];
 
@@ -48,6 +48,7 @@ function setStrip(d) {
 
 const decoded = document.getElementById('decoded');
 const encoded = document.getElementById('encoded');
+const shiftValue = document.getElementById('shift-value');
 
 // Forskyvningen: heltall, kan bli større enn alfabetet hvis man drar flere runder.
 // Posisjonen på skiven er den eneste inngangen.
@@ -65,6 +66,8 @@ function update() {
 // Setter forskyvningen, og flytter raden med mindre vi drar (da flytter musa den selv)
 function setShift(n, moveStrip = true) {
     shift = n;
+    // Viser forskyvningen innenfor alfabetet (0 til N-1), som skiven
+    shiftValue.textContent = mod(n, N);
     if (moveStrip) {
         strip.classList.remove('snap');
         setStrip(n);
@@ -129,6 +132,10 @@ strip.addEventListener('keydown', e => {
     e.preventDefault();
 });
 
+// Store knapper for dem som ikke kan eller vil dra
+document.getElementById('shift-down').addEventListener('click', () => setShift(shift - 1));
+document.getElementById('shift-up').addEventListener('click', () => setShift(shift + 1));
+
 // Alfabetet har bare små bokstaver, så begge feltene tvinges til små bokstaver
 // (også ved lim inn). Vi husker markøren, ellers hopper den til slutten når
 // verdien byttes ut.
@@ -144,5 +151,4 @@ function forceLowercase(field) {
 
 decoded.addEventListener('input', () => { forceLowercase(decoded); source = decoded; update(); });
 encoded.addEventListener('input', () => { forceLowercase(encoded); source = encoded; update(); });
-setStrip(shift);
-update();
+setShift(shift);

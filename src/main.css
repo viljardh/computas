@@ -30,6 +30,11 @@ label, .panel-title {
     margin-bottom: 8px;
 }
 
+.hint {
+    margin: 0 0 12px;
+    color: #333;
+}
+
 textarea {
     box-sizing: border-box;
     width: 100%;
@@ -58,11 +63,12 @@ textarea {
     border: 2px solid #999;
 }
 
+/* Mørk nok blå til at hvit tekst har god nok kontrast (WCAG AA) */
 .row-top {
-    border-color: #2196F3;
+    border-color: #1976D2;
     border-radius: 6px 6px 0 0;
     border-bottom-width: 1px;
-    background-color: #2196F3;
+    background-color: #1976D2;
 }
 
 .row-bottom {
@@ -108,4 +114,61 @@ textarea {
 .row-top .cell {
     color: white;
     border-right-color: rgba(255, 255, 255, 0.35);
+}
+
+/* ---- Knapper og visning av forskyvningen ---- */
+
+.shift-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.shift-btn {
+    width: 72px;
+    height: 72px;
+    padding: 0;
+    font-family: inherit;
+    font-size: 44px;
+    font-weight: bold;
+    line-height: 1;
+    color: white;
+    background-color: #1976D2;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    touch-action: manipulation; /* ingen dobbelttrykk-zoom ved raske trykk */
+}
+
+.shift-btn:hover {
+    background-color: #1565C0;
+}
+
+.shift-btn:active {
+    background-color: #0D47A1;
+}
+
+.shift-btn:focus-visible {
+    outline: 3px solid #000;
+    outline-offset: 3px;
+}
+
+.shift-display {
+    min-width: 130px;
+    text-align: center;
+}
+
+.shift-label {
+    display: block;
+    font-weight: bold;
+}
+
+.shift-value {
+    display: block;
+    font-size: 48px;
+    font-weight: bold;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
 }
